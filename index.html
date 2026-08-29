@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>贪吃游鱼</title>
+    <title>贪吃蛇 · 数据管理</title>
     <style>
         /* ===== 重置 ===== */
         * {
@@ -35,6 +35,924 @@
             border: 1px solid rgba(255, 245, 230, 0.5);
             position: relative;
         }
+
+        /* ===== 顶部 ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .score-label {
+            color: #7f6e5c;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .score-value {
+            color: #c29a4a;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        /* ===== 画布 ===== */
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1/1;
+            border-radius: 14px;
+            background: #e8ddd0;
+            box-shadow: inset 0 0 0 1px rgba(180, 150, 120, 0.15);
+            image-rendering: pixelated;
+            touch-action: none;
+        }
+
+        /* ===== 底部 ===== */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px;
+            padding: 0 4px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .status {
+            color: #7f6e5c;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .status .highlight {
+            color: #b8956a;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid rgba(160, 130, 100, 0.20);
+            color: #7f6e5c;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .btn:hover {
+            background: rgba(160, 130, 100, 0.08);
+            border-color: rgba(160, 130, 100, 0.35);
+            color: #5a4a3a;
+        }
+        .btn:active {
+            transform: scale(0.94);
+        }
+        .btn-pause {
+            min-width: 60px;
+        }
+        .btn-restart {
+            border-color: rgba(160, 130, 100, 0.20);
+        }
+        .btn-leaderboard {
+            border-color: rgba(194, 154, 74, 0.30);
+            color: #b8956a;
+        }
+        .btn-leaderboard:hover {
+            background: rgba(194, 154, 74, 0.10);
+            border-color: rgba(194, 154, 74, 0.50);
+            color: #8a6d42;
+        }
+        .btn-data {
+            border-color: rgba(120, 160, 180, 0.30);
+            color: #6a8a9a;
+        }
+        .btn-data:hover {
+            background: rgba(120, 160, 180, 0.10);
+            border-color: rgba(120, 160, 180, 0.50);
+            color: #4a6a7a;
+        }
+
+        /* ===== 控制模式切换 ===== */
+        .mode-switch {
+            display: flex;
+            gap: 6px;
+            background: rgba(200, 180, 160, 0.15);
+            border-radius: 40px;
+            padding: 4px;
+            border: 1px solid rgba(160, 130, 100, 0.10);
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #7f6e5c;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+        .mode-btn.active {
+            background: #fcf8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            color: #4a3d32;
+        }
+        .mode-btn:active {
+            transform: scale(0.92);
+        }
+
+        /* ===== 十字方向键 ===== */
+        .touch-controls {
+            display: flex;
+            justify-content: center;
+            margin-top: 18px;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: 104px 104px 104px;
+            grid-template-rows: 104px 104px 104px;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(200, 180, 160, 0.12);
+            border-radius: 28px;
+        }
+
+        .dpad-up {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        .dpad-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        .dpad-right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        .dpad-down {
+            grid-column: 2;
+            grid-row: 3;
+        }
+        .dpad-center {
+            grid-column: 2;
+            grid-row: 2;
+            background: transparent;
+            pointer-events: none;
+            border-radius: 50%;
+            border: 1px solid rgba(160, 130, 100, 0.10);
+        }
+
+        .touch-btn {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background: rgba(200, 180, 160, 0.15);
+            border: 1px solid rgba(160, 130, 100, 0.12);
+            color: #6b5a48;
+            font-size: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            touch-action: none;
+            transition: transform 0.05s, background 0.05s;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .touch-btn:active {
+            transform: scale(0.78);
+            background: rgba(200, 180, 160, 0.30);
+            border-color: rgba(160, 130, 100, 0.30);
+            color: #3d3228;
+            box-shadow: inset 0 0 20px rgba(200, 180, 160, 0.20);
+        }
+
+        /* ===== 摇杆 ===== */
+        .joystick-area {
+            display: none;
+            justify-content: center;
+            margin-top: 18px;
+        }
+
+        .joystick-base {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: rgba(200, 180, 160, 0.20);
+            border: 2px solid rgba(160, 130, 100, 0.20);
+            position: relative;
+            touch-action: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .joystick-thumb {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: rgba(200, 180, 160, 0.40);
+            border: 1px solid rgba(160, 130, 100, 0.25);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: none;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .joystick-base:active .joystick-thumb {
+            background: rgba(200, 180, 160, 0.60);
+            border-color: rgba(160, 130, 100, 0.40);
+        }
+
+        /* ===== 模态框通用 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.40);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.94);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-card {
+            background: #fcf8f0;
+            border-radius: 24px;
+            padding: 24px 28px 28px 28px;
+            max-width: 420px;
+            width: 100%;
+            max-height: 80vh;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.20);
+            border: 1px solid rgba(255, 245, 230, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(200, 180, 160, 0.20);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #4a3d32;
+            letter-spacing: 1px;
+        }
+        .modal-title span {
+            color: #c29a4a;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 28px;
+            color: #7f6e5c;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            transition: color 0.2s, transform 0.15s;
+        }
+        .modal-close:hover {
+            color: #4a3d32;
+        }
+        .modal-close:active {
+            transform: scale(0.85);
+        }
+
+        .modal-body {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 4px;
+        }
+        .modal-body::-webkit-scrollbar {
+            width: 4px;
+        }
+        .modal-body::-webkit-scrollbar-track {
+            background: rgba(200, 180, 160, 0.10);
+            border-radius: 8px;
+        }
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(200, 180, 160, 0.30);
+            border-radius: 8px;
+        }
+
+        /* ===== 高分榜列表 ===== */
+        .score-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .score-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 8px;
+            border-bottom: 1px solid rgba(200, 180, 160, 0.10);
+            gap: 12px;
+        }
+        .score-item:last-child {
+            border-bottom: none;
+        }
+
+        .score-rank {
+            font-weight: 700;
+            font-size: 16px;
+            color: #7f6e5c;
+            min-width: 32px;
+            text-align: center;
+        }
+        .score-rank.top1 {
+            color: #f5b832;
+        }
+        .score-rank.top2 {
+            color: #b8a090;
+        }
+        .score-rank.top3 {
+            color: #cd8d4a;
+        }
+
+        .score-value-item {
+            font-weight: 700;
+            font-size: 18px;
+            color: #4a3d32;
+            flex: 1;
+        }
+
+        .score-date {
+            font-size: 12px;
+            color: #9a8a7a;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #9a8a7a;
+            padding: 30px 0;
+            font-size: 15px;
+        }
+        .empty-state .icon {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* ===== 数据管理 ===== */
+        .data-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 8px 0;
+        }
+
+        .data-action-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .data-action-btn {
+            background: rgba(200, 180, 160, 0.12);
+            border: 1px solid rgba(160, 130, 100, 0.15);
+            color: #4a3d32;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            letter-spacing: 0.5px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .data-action-btn:hover {
+            background: rgba(200, 180, 160, 0.22);
+            border-color: rgba(160, 130, 100, 0.30);
+        }
+        .data-action-btn:active {
+            transform: scale(0.94);
+        }
+        .data-action-btn.primary {
+            background: rgba(194, 154, 74, 0.15);
+            border-color: rgba(194, 154, 74, 0.25);
+            color: #8a6d42;
+        }
+        .data-action-btn.primary:hover {
+            background: rgba(194, 154, 74, 0.25);
+            border-color: rgba(194, 154, 74, 0.40);
+        }
+        .data-action-btn.danger {
+            background: rgba(200, 100, 80, 0.10);
+            border-color: rgba(200, 100, 80, 0.20);
+            color: #8a5a4a;
+        }
+        .data-action-btn.danger:hover {
+            background: rgba(200, 100, 80, 0.20);
+            border-color: rgba(200, 100, 80, 0.35);
+        }
+
+        .data-hint {
+            font-size: 13px;
+            color: #9a8a7a;
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+
+        .data-status {
+            font-size: 14px;
+            color: #6a8a7a;
+            padding: 10px 12px;
+            background: rgba(120, 180, 160, 0.08);
+            border-radius: 12px;
+            border: 1px solid rgba(120, 180, 160, 0.12);
+            margin-top: 4px;
+            display: none;
+        }
+        .data-status.show {
+            display: block;
+        }
+        .data-status.error {
+            color: #b05a4a;
+            background: rgba(200, 100, 80, 0.08);
+            border-color: rgba(200, 100, 80, 0.15);
+        }
+        .data-status.success {
+            color: #4a8a6a;
+            background: rgba(80, 180, 120, 0.08);
+            border-color: rgba(80, 180, 120, 0.15);
+        }
+
+        .file-input-wrap {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .file-input-wrap input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 580px) {
+            .game-container {
+                padding: 14px 14px 18px 14px;
+                border-radius: 18px;
+            }
+            .score-value {
+                font-size: 24px;
+            }
+            .score-label {
+                font-size: 12px;
+            }
+
+            .dpad {
+                grid-template-columns: 84px 84px 84px;
+                grid-template-rows: 84px 84px 84px;
+                gap: 8px;
+                padding: 8px;
+                border-radius: 22px;
+            }
+            .touch-btn {
+                font-size: 32px;
+                border-radius: 16px;
+            }
+
+            .joystick-base {
+                width: 150px;
+                height: 150px;
+            }
+            .joystick-thumb {
+                width: 58px;
+                height: 58px;
+            }
+
+            .status {
+                font-size: 12px;
+            }
+            .btn {
+                font-size: 12px;
+                padding: 3px 12px;
+            }
+            .mode-btn {
+                font-size: 12px;
+                padding: 3px 12px;
+            }
+            .data-action-btn {
+                font-size: 13px;
+                padding: 8px 18px;
+                min-width: 100px;
+            }
+
+            .modal-card {
+                padding: 18px 18px 22px 18px;
+                max-width: 360px;
+            }
+            .modal-title {
+                font-size: 19px;
+            }
+            .score-value-item {
+                font-size: 16px;
+            }
+            .score-rank {
+                font-size: 14px;
+                min-width: 26px;
+            }
+            .score-date {
+                font-size: 11px;
+            }
+            .score-item {
+                padding: 8px 4px;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 440px) {
+            .game-container {
+                padding: 10px 10px 14px 10px;
+                border-radius: 14px;
+            }
+            .score-value {
+                font-size: 20px;
+            }
+            .dpad {
+                grid-template-columns: 68px 68px 68px;
+                grid-template-rows: 68px 68px 68px;
+                gap: 6px;
+                padding: 6px;
+                border-radius: 18px;
+            }
+            .touch-btn {
+                font-size: 24px;
+                border-radius: 14px;
+            }
+            .joystick-base {
+                width: 120px;
+                height: 120px;
+            }
+            .joystick-thumb {
+                width: 46px;
+                height: 46px;
+            }
+            .score-label {
+                font-size: 11px;
+            }
+            .status {
+                font-size: 11px;
+            }
+            .btn {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .mode-btn {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .data-action-btn {
+                font-size: 12px;
+                padding: 6px 14px;
+                min-width: 80px;
+            }
+
+            .modal-card {
+                padding: 14px 14px 18px 14px;
+                max-width: 300px;
+            }
+            .modal-title {
+                font-size: 17px;
+            }
+            .score-value-item {
+                font-size: 14px;
+            }
+            .score-rank {
+                font-size: 12px;
+                min-width: 22px;
+            }
+            .score-date {
+                font-size: 10px;
+            }
+            .score-item {
+                padding: 6px 2px;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+
+        <!-- 顶部 -->
+        <div class="header">
+            <span class="score-label">分数</span>
+            <span class="score-value" id="scoreDisplay">0</span>
+        </div>
+
+        <!-- 画布 -->
+        <canvas id="gameCanvas" width="500" height="500"></canvas>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <span class="status" id="statusDisplay">
+                <span class="highlight">▶</span> 方向键开始
+            </span>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div class="mode-switch" id="modeSwitch">
+                    <button class="mode-btn active" data-mode="dpad">十字</button>
+                    <button class="mode-btn" data-mode="joystick">摇杆</button>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-pause" id="pauseBtn">⏸ 暂停</button>
+                    <button class="btn btn-leaderboard" id="leaderboardBtn">🏆 高分榜</button>
+                    <button class="btn btn-data" id="dataBtn">💾 数据</button>
+                    <button class="btn btn-restart" id="restartBtn">↻ 重来</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 十字方向键 -->
+        <div class="touch-controls" id="dpadContainer">
+            <div class="dpad">
+                <button class="touch-btn dpad-up" data-dir="up">▲</button>
+                <button class="touch-btn dpad-left" data-dir="left">◀</button>
+                <button class="touch-btn dpad-right" data-dir="right">▶</button>
+                <button class="touch-btn dpad-down" data-dir="down">▼</button>
+                <div class="dpad-center"></div>
+            </div>
+        </div>
+
+        <!-- 摇杆 -->
+        <div class="joystick-area" id="joystickContainer">
+            <div class="joystick-base" id="joystickBase">
+                <div class="joystick-thumb" id="joystickThumb"></div>
+            </div>
+        </div>
+
+        <!-- ===== 高分榜模态框 ===== -->
+        <div class="modal-overlay" id="leaderboardModal">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <div class="modal-title">🏆 <span>高分榜</span></div>
+                    <button class="modal-close" id="modalCloseBtn">✕</button>
+                </div>
+                <div class="modal-body" id="leaderboardBody">
+                    <!-- 由 JS 动态渲染 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 数据管理模态框 ===== -->
+        <div class="modal-overlay" id="dataModal">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <div class="modal-title">💾 <span>数据管理</span></div>
+                    <button class="modal-close" id="dataModalCloseBtn">✕</button>
+                </div>
+                <div class="modal-body" id="dataModalBody">
+                    <div class="data-actions">
+                        <div class="data-action-row">
+                            <button class="data-action-btn primary" id="exportBtn">📤 导出数据</button>
+                            <span class="data-hint">下载 JSON 备份文件</span>
+                        </div>
+                        <div class="data-action-row">
+                            <div class="file-input-wrap">
+                                <button class="data-action-btn" id="importBtn">📥 导入数据</button>
+                                <input type="file" id="fileInput" accept=".json,application/json" />
+                            </div>
+                            <span class="data-hint">从 JSON 文件恢复记录</span>
+                        </div>
+                        <div class="data-hint" style="font-size:12px;color:#b09a8a;padding-left:4px;">
+                            ⚠️ 导入将<strong>覆盖</strong>当前所有本地记录
+                        </div>
+                        <div id="dataStatus" class="data-status"></div>
+                        <div style="margin-top:4px;font-size:12px;color:#9a8a7a;border-top:1px solid rgba(200,180,160,0.15);padding-top:12px;">
+                            当前记录数：<strong id="recordCount">0</strong> 条
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ================================================================
+            //  配置
+            // ================================================================
+            const BOARD_SIZE = 20;
+            const CELL_SIZE = 500 / BOARD_SIZE;
+
+            const BASE_INTERVAL = 280;
+            const MIN_INTERVAL = 80;
+            const SPEED_STEP = 3;
+
+            const HIGH_SCORE_KEY = 'snake_high_scores';
+            const MAX_SCORES = 10;
+
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            const scoreSpan = document.getElementById('scoreDisplay');
+            const statusDiv = document.getElementById('statusDisplay');
+
+            // ================================================================
+            //  DOM 引用
+            // ================================================================
+            const dpadContainer = document.getElementById('dpadContainer');
+            const joystickContainer = document.getElementById('joystickContainer');
+            const modeBtns = document.querySelectorAll('.mode-btn');
+            const joystickBase = document.getElementById('joystickBase');
+            const joystickThumb = document.getElementById('joystickThumb');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const leaderboardBtn = document.getElementById('leaderboardBtn');
+            const leaderboardModal = document.getElementById('leaderboardModal');
+            const modalCloseBtn = document.getElementById('modalCloseBtn');
+            const leaderboardBody = document.getElementById('leaderboardBody');
+            const dataBtn = document.getElementById('dataBtn');
+            const dataModal = document.getElementById('dataModal');
+            const dataModalCloseBtn = document.getElementById('dataModalCloseBtn');
+            const dataModalBody = document.getElementById('dataModalBody');
+            const exportBtn = document.getElementById('exportBtn');
+            const importBtn = document.getElementById('importBtn');
+            const fileInput = document.getElementById('fileInput');
+            const dataStatus = document.getElementById('dataStatus');
+            const recordCount = document.getElementById('recordCount');
+
+            // ================================================================
+            //  游戏状态
+            // ================================================================
+            let snake = [];
+            let food = { x: 8, y: 10 };
+            let direction = 'right';
+            let nextDirection = 'right';
+            let score = 0;
+            let gameOver = false;
+            let win = false;
+            let gameLoopInterval = null;
+            let isGameRunning = false;
+            let currentInterval = BASE_INTERVAL;
+            let currentMode = 'dpad';
+            let isPaused = false;
+
+            let joystickActive = false;
+            let joystickDir = null;
+
+            // ================================================================
+            //  震动反馈
+            // ================================================================
+            function triggerHaptic() {
+                if (navigator.vibrate) {
+                    navigator.vibrate(8);
+                }
+            }
+
+            // ================================================================
+            //  高分榜 - 存储与读取
+            // ================================================================
+            function getHighScores() {
+                try {
+                    const data = localStorage.getItem(HIGH_SCORE_KEY);
+                    return data ? JSON.parse(data) : [];
+                } catch (_) {
+                    return [];
+                }
+            }
+
+            function saveHighScore(newScore) {
+                if (newScore <= 0) return false;
+
+                let scores = getHighScores();
+
+                const now = new Date();
+                const dateStr = now.getFullYear() + '-' +
+                    String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(now.getDate()).padStart(2, '0') + ' ' +
+                    String(now.getHours()).padStart(2, '0') + ':' +
+                    String(now.getMinutes()).padStart(2, '0');
+                scores.push({ score: newScore, date: dateStr });
+
+                scores.sort((a, b) => b.score - a.score);
+
+                if (scores.length > MAX_SCORES) {
+                    scores = scores.slice(0, MAX_SCORES);
+                }
+
+                localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(scores));
+                return true;
+            }
+
+            function setHighScores(scores) {
+                // 直接设置高分榜数据（用于导入）
+                if (!Array.isArray(scores)) return false;
+                // 过滤并验证数据
+                const valid = scores.filter(item =>
+                    typeof item === 'object' &&
+                    item !== null &&
+                    typeof item.score === 'number' &&
+                    item.score > 0 &&
+                    typeof item.date === 'string'
+                );
+                if (valid.length === 0) return false;
+                // 排序去重取前 N
+                valid.sort((a, b) => b.score - a.score);
+                const trimmed = valid.slice(0, MAX_SCORES);
+                localStorage.setItem(HIGH_SCORE_KEY, JSON.stringify(trimmed));
+                return true;
+            }
+
+            function renderLeaderboard() {
+                const scores = getHighScores();
+
+                if (scores.length === 0) {
+                    leaderboardBody.innerHTML = `
+                        <div class="empty-state">
+                            <span class="icon">📭</span>
+                            还没有记录<br/>快去挑战吧！
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '<ul class="score-list">';
+                scores.forEach((item, index) => {
+                    const rank = index + 1;
+                    let rankClass = 'score-rank';
+                    if (rank === 1) rankClass += ' top1';
+                    else if (rank === 2) rankClass += ' top2';
+                    else if (rank === 3) rankClass += ' top3';
+
+                    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank;
+
+                    html += `
+                        <li class="score-item">
+                            <span class="${rankClass}">${medal}</span>
+                            <span class="score-value-item">${item.score}</span>
+                            <span class="score-date">${item.date}</span>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                leaderboardBody.innerHTML = html;
+            }
+
+            // ================================================================
+            //  数据管理 - 导出 / 导入
+            // ================================================================
+                    }
 
         /* ===== 顶部 ===== */
         .header {
